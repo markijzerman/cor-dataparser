@@ -16,7 +16,7 @@ ControlP5 cp5;
 
 DropdownList xAxisOptions, yAxisOptions, circleSizeOptions;
 Slider scaleSliderX, scaleSliderY;
-Button resetView;
+Button resetView, screenshots, optimum;
 
 Property xAxisProperty;
 Property yAxisProperty;
@@ -25,8 +25,10 @@ Property circleSizeProperty;
 TreeMap<String, PropertyGroup> propertyGroups;
 HashMap<String, DataPoint> dataPoints;
 
-int clr0 = 255;
+int clr0 = 200;
 int clr1 = 125;
+
+boolean screenshot = false;
 
 class Translation {
   float x = 0.0;
@@ -40,21 +42,6 @@ Translation translation = new Translation();
 
 void setup() {
   cp5 = new ControlP5(this);
-  
-  xAxisOptions = cp5.addDropdownList("xAxisOptions")
-    .setPosition(width - 320, 10)
-    .setSize(150, 200)
-    .setOpen(false);
-
-  yAxisOptions = cp5.addDropdownList("yAxisOptions")
-    .setPosition(width - 160, 10)
-    .setSize(150, 200)
-    .setOpen(false);
-    
-  circleSizeOptions = cp5.addDropdownList("circleSizeOptions")
-    .setPosition(width - 320, 30)
-    .setSize(150, 200)
-    .setOpen(false);
   
   scaleSliderX = cp5.addSlider("scaleSliderX")
     .setPosition(width - 160, 30)
@@ -73,7 +60,30 @@ void setup() {
   resetView = cp5.addButton("resetView")
     .setPosition(width - 160, 70)
     .setSize(150, 15);
+    
+  optimum = cp5.addButton("optimum")
+    .setPosition(width - 160, 90)
+    .setSize(150, 15);
+    
+  screenshots = cp5.addButton("do everything")
+    .setPosition(width - 160, 110)
+    .setSize(150, 15);
 
+  xAxisOptions = cp5.addDropdownList("xAxisOptions")
+    .setPosition(width - 320, 10)
+    .setSize(150, 200)
+    .setOpen(false);
+
+  yAxisOptions = cp5.addDropdownList("yAxisOptions")
+    .setPosition(width - 160, 10)
+    .setSize(150, 200)
+    .setOpen(false);
+    
+  circleSizeOptions = cp5.addDropdownList("circleSizeOptions")
+    .setPosition(width - 320, 30)
+    .setSize(150, 200)
+    .setOpen(false);
+  
   propertyGroups = new TreeMap<String, PropertyGroup>(); 
   readSignatureFiles();
   readAnswerFiles();
@@ -111,6 +121,10 @@ void draw() {
   line(0, width/2, height, width/2);
 
   drawGraph();
+  
+  if (screenshot) {
+    saveFrame(); 
+  }
 }
 
 PropertyGroup getOrCreatePropertyGroup(String name) {
@@ -222,7 +236,7 @@ void readAnswerFiles() {
 void controlEvent(ControlEvent theEvent) {
   if (theEvent.isGroup()) {
     println("event from group : "+theEvent.getGroup().getValue()+" from "+theEvent.getGroup());
-  } else if (theEvent.isController() && !theEvent.getController().getLabel().contains("Slider") && !theEvent.getController().getLabel().contains("reset")) {
+  } else if (theEvent.isController() && theEvent.getController().getLabel().contains("Options")) {
     int index = (int) theEvent.getController().getValue();
     DropdownList d = (DropdownList) theEvent.getController(); 
     Property p = (Property) d.getItem(index).get("value");
@@ -241,6 +255,29 @@ void controlEvent(ControlEvent theEvent) {
     translation.y = 0.0;
     translation.startX = 0.0;
     translation.startY = 0.0;
+    scaleSliderX.setValue(1.0);
+    scaleSliderY.setValue(1.0);
+  } else if(theEvent.getController().getLabel().equals("optimum")){
+    float minX = Float.MAX_VALUE;
+    float maxX = Float.MIN_VALUE;
+    float minY = Float.MAX_VALUE;
+    float maxY = Float.MIN_VALUE;
+    for (Map.Entry<String, DataPoint> entry : dataPoints.entrySet()) {
+      DataPoint d = entry.getValue();
+      if (d.x != Float.MIN_VALUE && d.y != Float.MIN_VALUE) {
+
+        println(d.x + " : " + minX + " : " + maxX);
+        minX = min(d.x,minX);
+        maxX = max(d.x,maxX);
+        minY = min(d.y,minY);
+        maxY = max(d.y,maxY);
+      }
+    }
+    println(width/(maxX-minX));
+    scaleSliderX.setValue(width/(maxX-(minX-20)));
+    scaleSliderY.setValue(height/(maxY-(minY-20)));
+    translation.x = -1 * scaleSliderX.getValue() * minX;
+    translation.y = -1 * scaleSliderY.getValue() * minY;
   }
 }
 
@@ -363,10 +400,10 @@ void mouseDragged(MouseEvent event) {
   }
   translation.x = event.getX() - translation.startX;
   translation.y = event.getY() - translation.startY;
-  clr0 = 220;
+  clr0 = 190;
 }
 
 void mouseReleased() {
     translation.isTranslating = false;
-    clr0 = 255;
+    clr0 = 200;
 }
