@@ -13,8 +13,10 @@ boolean playFileOnClick;
 float size;
 
 ControlP5 cp5;
+
 DropdownList xAxisOptions, yAxisOptions, circleSizeOptions;
-Slider scaleSlider;
+Slider scaleSliderX, scaleSliderY;
+Button resetView;
 
 Property xAxisProperty;
 Property yAxisProperty;
@@ -23,9 +25,22 @@ Property circleSizeProperty;
 TreeMap<String, PropertyGroup> propertyGroups;
 HashMap<String, DataPoint> dataPoints;
 
+int clr0 = 255;
+int clr1 = 125;
+
+class Translation {
+  float x = 0.0;
+  float y = 0.0;
+  float startX = 0.0;
+  float startY = 0.0;
+  boolean isTranslating = false;
+}
+
+Translation translation = new Translation();
 
 void setup() {
   cp5 = new ControlP5(this);
+  
   xAxisOptions = cp5.addDropdownList("xAxisOptions")
     .setPosition(width - 320, 10)
     .setSize(150, 200)
@@ -41,12 +56,23 @@ void setup() {
     .setSize(150, 200)
     .setOpen(false);
   
-  scaleSlider = cp5.addSlider("scaleSlider")
+  scaleSliderX = cp5.addSlider("scaleSliderX")
     .setPosition(width - 160, 30)
-    .setSize(150, 20)
+    .setSize(100, 15)
     .setMin(1.0)
-    .setMax(1.0)
+    .setMax(10.0)
     .setValue(1.0);
+
+  scaleSliderY = cp5.addSlider("scaleSliderY")
+    .setPosition(width - 160, 50)
+    .setSize(100, 15)
+    .setMin(1.0)
+    .setMax(10.0)
+    .setValue(1.0);
+    
+  resetView = cp5.addButton("resetView")
+    .setPosition(width - 160, 70)
+    .setSize(150, 15);
 
   propertyGroups = new TreeMap<String, PropertyGroup>(); 
   readSignatureFiles();
@@ -78,9 +104,9 @@ void setup() {
 }
 
 void draw() {
-  background(255);
-
-  stroke(0);
+  fill(clr0);
+  rect(0,0,width,height);
+  stroke(clr1);
   line(height/2, 0, height/2, width);
   line(0, width/2, height, width/2);
 
@@ -135,7 +161,7 @@ void readSignatureFiles() {
                 v = (double) prop.getValue();
               }
 
-              PropertyValue pv = new PropertyValue(filename.replace(" .wav.sig", ""), v, p);
+              PropertyValue pv = new PropertyValue(filename.replace(".wav.sig", ""), v, p);
               p.addValue(filename, pv);
             }
           }
@@ -171,32 +197,32 @@ void readAnswerFiles() {
     Property pTop = pgTop.getProperty("");
     Property pBottom = pgBottom.getProperty("");
 
-    JSONArray answers = json.getJSONArray("answers");
-    for (int j = 0; j < answers.size(); j++) {
-      JSONObject answer = answers.getJSONObject(j);
+    //JSONArray answers = json.getJSONArray("answers");
+    //for (int j = 0; j < answers.size(); j++) {
+    //  JSONObject answer = answers.getJSONObject(j);
 
-      if (answer.getString("mode").toLowerCase().equals("sound")) {
-        String soundFileName = answer.getString("participant") + "-" + answer.getString("question");
-        PropertyValue pvLeft = new PropertyValue(soundFileName, map(answer.getFloat("x"), -1, 1, 1, 0), pLeft);
-        pLeft.addValue(soundFileName, pvLeft);
+    //  if (answer.getString("mode").toLowerCase().equals("sound")) {
+    //    String soundFileName = answer.getString("participant") + "-" + answer.getString("question");
+    //    PropertyValue pvLeft = new PropertyValue(soundFileName, map(answer.getFloat("x"), -1, 1, 1, 0), pLeft);
+    //    pLeft.addValue(soundFileName, pvLeft);
 
-        PropertyValue pvRight = new PropertyValue(soundFileName, map(answer.getFloat("x"), -1, 1, 0, 1), pRight);
-        pRight.addValue(soundFileName, pvRight);
+    //    PropertyValue pvRight = new PropertyValue(soundFileName, map(answer.getFloat("x"), -1, 1, 0, 1), pRight);
+    //    pRight.addValue(soundFileName, pvRight);
 
-        PropertyValue pvTop = new PropertyValue(soundFileName, map(answer.getFloat("y"), -1, 1, 1, 0), pTop);
-        pTop.addValue(soundFileName, pvTop);
+    //    PropertyValue pvTop = new PropertyValue(soundFileName, map(answer.getFloat("y"), -1, 1, 1, 0), pTop);
+    //    pTop.addValue(soundFileName, pvTop);
 
-        PropertyValue pvBottom = new PropertyValue(soundFileName, map(answer.getFloat("y"), -1, 1, 0, 1), pBottom);
-        pBottom.addValue(soundFileName, pvBottom);
-      }
-    }
+    //    PropertyValue pvBottom = new PropertyValue(soundFileName, map(answer.getFloat("y"), -1, 1, 0, 1), pBottom);
+    //    pBottom.addValue(soundFileName, pvBottom);
+    //  }
+    //}
   }
 }
 
 void controlEvent(ControlEvent theEvent) {
   if (theEvent.isGroup()) {
     println("event from group : "+theEvent.getGroup().getValue()+" from "+theEvent.getGroup());
-  } else if (theEvent.isController() && !theEvent.getController().getLabel().contains("Slider")) {
+  } else if (theEvent.isController() && !theEvent.getController().getLabel().contains("Slider") && !theEvent.getController().getLabel().contains("reset")) {
     int index = (int) theEvent.getController().getValue();
     DropdownList d = (DropdownList) theEvent.getController(); 
     Property p = (Property) d.getItem(index).get("value");
@@ -210,6 +236,11 @@ void controlEvent(ControlEvent theEvent) {
       circleSizeProperty = p;
       }
     updateDataPoints();
+  } else if(theEvent.getController().getLabel().equals("resetView")){
+    translation.x = 0.0;
+    translation.y = 0.0;
+    translation.startX = 0.0;
+    translation.startY = 0.0;
   }
 }
 
@@ -270,11 +301,12 @@ void drawGraph() {
       if (d.x != Float.MIN_VALUE && d.y != Float.MIN_VALUE) {
         float clr = d.size*255;
         fill(clr,255,255);
-        ellipse(d.x * scaleSlider.getValue(), d.y, 10, 10);
+        ellipse(d.x * scaleSliderX.getValue() + translation.x, d.y * scaleSliderY.getValue() + translation.y, 10, 10);
 
         // check if cursor is nearby data point
-        if (dist(mouseX, mouseY, (float) d.x * scaleSlider.getValue(), (float) d.y) < (d.size*100)-5) {
+        if (dist(mouseX, mouseY, (float) d.x * scaleSliderX.getValue() + translation.x, (float) d.y * scaleSliderY.getValue() + translation.y) < 10) {
           hover = d;
+          ellipse(d.x * scaleSliderX.getValue() + translation.x, d.y * scaleSliderY.getValue() + translation.y, 12, 12);
 
           // store this data point for playback if mouse was clicked
           if (playFileOnClick == true) {
@@ -286,9 +318,9 @@ void drawGraph() {
 
     // if there was a data point near the cursor
     if (hover != null) {
-      fill(0,0,0);
+      fill(clr1);
       textSize(8);
-      text(hover.filename, hover.x, hover.y);
+      text(hover.filename, hover.x * scaleSliderX.getValue() + translation.x, hover.y * scaleSliderY.getValue() + translation.y);
     //  text("X " + hover.x, 2, 10);
     }
 
@@ -296,7 +328,7 @@ void drawGraph() {
     // (was put out of the loop to only load/play 1 sample)
     if (click != null) {
       String soundFileName = click.filename + ".wav";
-      
+      println(soundFileName);
       // construct filepath for filename
       String path = dataPath("sounds/" + soundFileName); 
       File f = new File(path);
@@ -321,4 +353,20 @@ void drawGraph() {
 
 void mouseClicked() {
   playFileOnClick = true;
+}
+
+void mouseDragged(MouseEvent event) {
+  if(!translation.isTranslating) {
+    translation.startX = event.getX() - translation.x;
+    translation.startY = event.getY() - translation.y;
+    translation.isTranslating = true;
+  }
+  translation.x = event.getX() - translation.startX;
+  translation.y = event.getY() - translation.startY;
+  clr0 = 220;
+}
+
+void mouseReleased() {
+    translation.isTranslating = false;
+    clr0 = 255;
 }
