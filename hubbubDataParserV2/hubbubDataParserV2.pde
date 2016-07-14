@@ -16,7 +16,7 @@ ControlP5 cp5;
 
 DropdownList xAxisOptions, yAxisOptions, circleSizeOptions;
 Slider scaleSliderX, scaleSliderY;
-Button resetView, screenshots, optimum;
+Button resetView, optimum;
 
 Property xAxisProperty;
 Property yAxisProperty;
@@ -65,10 +65,6 @@ void setup() {
     .setPosition(width - 160, 90)
     .setSize(150, 15);
     
-  screenshots = cp5.addButton("do everything")
-    .setPosition(width - 160, 110)
-    .setSize(150, 15);
-
   xAxisOptions = cp5.addDropdownList("xAxisOptions")
     .setPosition(width - 320, 10)
     .setSize(150, 200)
@@ -122,8 +118,21 @@ void draw() {
 
   drawGraph();
   
-  if (screenshot) {
-    saveFrame(); 
+  if (!screenshot) {
+    
+    fill(clr1);
+    textSize(12);
+    pushMatrix();
+    translate(20,height/2);
+    rotate(PI*1.5);
+    if(xAxisProperty != null)
+      text(xAxisProperty.name, 0,0);
+    popMatrix();
+    if(yAxisProperty != null)
+      text(yAxisProperty.name, width/2, 20);
+    
+    //saveFrame(); 
+    screenshot = false;
   }
 }
 
@@ -236,7 +245,7 @@ void readAnswerFiles() {
 void controlEvent(ControlEvent theEvent) {
   if (theEvent.isGroup()) {
     println("event from group : "+theEvent.getGroup().getValue()+" from "+theEvent.getGroup());
-  } else if (theEvent.isController() && theEvent.getController().getLabel().contains("Options")) {
+  } else if (theEvent.isController() && theEvent.getController() instanceof DropdownList) {
     int index = (int) theEvent.getController().getValue();
     DropdownList d = (DropdownList) theEvent.getController(); 
     Property p = (Property) d.getItem(index).get("value");
@@ -384,7 +393,6 @@ void drawGraph() {
         player.play();
       }
 
-
       // reset click state
       playFileOnClick = false;
     }
@@ -409,4 +417,10 @@ void mouseDragged(MouseEvent event) {
 void mouseReleased() {
     translation.isTranslating = false;
     clr0 = 200;
+}
+
+void keyReleased(){
+  if (key == ' '){
+    screenshot = true;
+  }
 }
