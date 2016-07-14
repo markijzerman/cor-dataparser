@@ -258,11 +258,16 @@ void controlEvent(ControlEvent theEvent) {
     scaleSliderX.setValue(1.0);
     scaleSliderY.setValue(1.0);
   } else if(theEvent.getController().getLabel().equals("optimum")){
+    optimizeView(dataPoints);
+  }
+}
+
+void optimizeView(HashMap<String, DataPoint> focusPoints) {
     float minX = Float.MAX_VALUE;
     float maxX = Float.MIN_VALUE;
     float minY = Float.MAX_VALUE;
     float maxY = Float.MIN_VALUE;
-    for (Map.Entry<String, DataPoint> entry : dataPoints.entrySet()) {
+    for (Map.Entry<String, DataPoint> entry : focusPoints.entrySet()) {
       DataPoint d = entry.getValue();
       if (d.x != Float.MIN_VALUE && d.y != Float.MIN_VALUE) {
 
@@ -273,12 +278,10 @@ void controlEvent(ControlEvent theEvent) {
         maxY = max(d.y,maxY);
       }
     }
-    println(width/(maxX-minX));
     scaleSliderX.setValue(width/(maxX-(minX-40)));
     scaleSliderY.setValue(height/(maxY-(minY-40)));
     translation.x = -1 * scaleSliderX.getValue() * minX + 20;
     translation.y = -1 * scaleSliderY.getValue() * minY + 20;
-  }
 }
 
 void updateDataPoints() {
