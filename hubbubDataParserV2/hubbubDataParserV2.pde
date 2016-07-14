@@ -274,10 +274,10 @@ void controlEvent(ControlEvent theEvent) {
       }
     }
     println(width/(maxX-minX));
-    scaleSliderX.setValue(width/(maxX-(minX-20)));
-    scaleSliderY.setValue(height/(maxY-(minY-20)));
-    translation.x = -1 * scaleSliderX.getValue() * minX;
-    translation.y = -1 * scaleSliderY.getValue() * minY;
+    scaleSliderX.setValue(width/(maxX-(minX-40)));
+    scaleSliderY.setValue(height/(maxY-(minY-40)));
+    translation.x = -1 * scaleSliderX.getValue() * minX + 20;
+    translation.y = -1 * scaleSliderY.getValue() * minY + 20;
   }
 }
 
