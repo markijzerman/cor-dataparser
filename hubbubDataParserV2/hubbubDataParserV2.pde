@@ -65,6 +65,11 @@ void setup() {
     .setPosition(width - 160, 90)
     .setSize(150, 15);
     
+  circleSizeOptions = cp5.addDropdownList("circleSizeOptions")
+    .setPosition(width - 320, 30)
+    .setSize(150, 200)
+    .setOpen(false);
+    
   xAxisOptions = cp5.addDropdownList("xAxisOptions")
     .setPosition(width - 320, 10)
     .setSize(150, 200)
@@ -75,10 +80,6 @@ void setup() {
     .setSize(150, 200)
     .setOpen(false);
     
-  circleSizeOptions = cp5.addDropdownList("circleSizeOptions")
-    .setPosition(width - 320, 30)
-    .setSize(150, 200)
-    .setOpen(false);
   
   propertyGroups = new TreeMap<String, PropertyGroup>(); 
   readSignatureFiles();
