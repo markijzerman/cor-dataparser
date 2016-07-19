@@ -94,9 +94,10 @@ void setup() {
       // filter out some errors in the data
       String [] inValid = { "left", "right", "top", "bottom" };
       if (!Arrays.asList(inValid).contains(group.name)) {
-
+        print(group.name + " : " + p.name + " -> "); 
         String name = (p.name != "") ? group.name + " - " + p.name : group.name;
-
+        println(name); 
+  
         xAxisOptions.addItem(name, p);
         yAxisOptions.addItem(name, p);
         circleSizeOptions.addItem(name, p);
@@ -119,22 +120,26 @@ void draw() {
 
   drawGraph();
   
-  if (!screenshot) {
+  fill(clr1);
+  textSize(12);
+  pushMatrix();
+  translate(20,height-200);
+  rotate(PI*1.5);
+  if(xAxisProperty != null){
+    text(xAxisOptions.getLabel(), 0,0);
+  }
+  popMatrix();
+  if(yAxisProperty != null){
+    text(yAxisOptions.getLabel(), 200, 20);
+  }
     
-    fill(clr1);
-    textSize(12);
-    pushMatrix();
-    translate(20,height/2);
-    rotate(PI*1.5);
-    if(xAxisProperty != null)
-      text(xAxisProperty.name, 0,0);
-    popMatrix();
-    if(yAxisProperty != null)
-      text(yAxisProperty.name, width/2, 20);
+  if (screenshot) {
     
-    //saveFrame(); 
+    saveFrame(); 
     screenshot = false;
   }
+  
+  
 }
 
 PropertyGroup getOrCreatePropertyGroup(String name) {
@@ -208,8 +213,9 @@ void readAnswerFiles() {
     String filepath = dirpath + "/" + filename;
     println("loading " + filename);
     JSONObject json = loadJSONObject(filepath);
-
     JSONObject q = json.getJSONObject("question");
+    JSONObject sound = json.getJSONObject("sound");
+    String soundFileName = sound.getString("filename");
 
     PropertyGroup pgLeft = getOrCreatePropertyGroup(q.getString("labelLeft"));
     PropertyGroup pgRight = getOrCreatePropertyGroup(q.getString("labelRight"));
@@ -220,26 +226,19 @@ void readAnswerFiles() {
     Property pRight = pgRight.getProperty("");
     Property pTop = pgTop.getProperty("");
     Property pBottom = pgBottom.getProperty("");
+    
+    
+     PropertyValue pvLeft = new PropertyValue(soundFileName, map(json.getFloat("x"), -1, 1, 1, 0), pLeft);
+     pLeft.addValue(soundFileName, pvLeft);
 
-    //JSONArray answers = json.getJSONArray("answers");
-    //for (int j = 0; j < answers.size(); j++) {
-    //  JSONObject answer = answers.getJSONObject(j);
+     PropertyValue pvRight = new PropertyValue(soundFileName, map(json.getFloat("x"), -1, 1, 0, 1), pRight);
+     pRight.addValue(soundFileName, pvRight);
 
-    //  if (answer.getString("mode").toLowerCase().equals("sound")) {
-    //    String soundFileName = answer.getString("participant") + "-" + answer.getString("question");
-    //    PropertyValue pvLeft = new PropertyValue(soundFileName, map(answer.getFloat("x"), -1, 1, 1, 0), pLeft);
-    //    pLeft.addValue(soundFileName, pvLeft);
+     PropertyValue pvTop = new PropertyValue(soundFileName, map(json.getFloat("y"), -1, 1, 1, 0), pTop);
+     pTop.addValue(soundFileName, pvTop);
 
-    //    PropertyValue pvRight = new PropertyValue(soundFileName, map(answer.getFloat("x"), -1, 1, 0, 1), pRight);
-    //    pRight.addValue(soundFileName, pvRight);
-
-    //    PropertyValue pvTop = new PropertyValue(soundFileName, map(answer.getFloat("y"), -1, 1, 1, 0), pTop);
-    //    pTop.addValue(soundFileName, pvTop);
-
-    //    PropertyValue pvBottom = new PropertyValue(soundFileName, map(answer.getFloat("y"), -1, 1, 0, 1), pBottom);
-    //    pBottom.addValue(soundFileName, pvBottom);
-    //  }
-    //}
+     PropertyValue pvBottom = new PropertyValue(soundFileName, map(json.getFloat("y"), -1, 1, 0, 1), pBottom);
+     pBottom.addValue(soundFileName, pvBottom);
   }
 }
 
