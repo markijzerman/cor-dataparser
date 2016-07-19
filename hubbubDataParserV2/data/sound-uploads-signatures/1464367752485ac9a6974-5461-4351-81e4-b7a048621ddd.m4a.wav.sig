@@ -3,14 +3,6 @@ metadata:
     version:
         essentia: "2.1-dev"
 
-loudness:
-    mean: 0.00429555634037
-    var: 3.07381537823e-06
-
-loudnessweightedzerox:
-    mean: 0.000130744025228
-    var: 2.84940293582e-09
-
 value:
     centroid:
         mean: 0.0789542719722
@@ -36,6 +28,12 @@ value:
     larm:
         mean: -97.9891586304
         var: 3.67452597618
+    loudness:
+        mean: 0.00429555634037
+        var: 3.07381537823e-06
+    loudnessweightedzerox:
+        mean: 0.000130744025228
+        var: 2.84940293582e-09
     onsetRate:
         mean: 0
         var: 0
